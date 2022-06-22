@@ -3,11 +3,10 @@
  ******************************************************************************/
 var quizFormEl = document.querySelector("#quiz-form");
 var startQuizFormEl = document.querySelector("#start-quiz-form");
-//var timerEl = document.querySelector(".timer-txt");
 
 var timeInterval;
 var questionId = 0;
-var userScore = 15;
+var userScore = 45;
 var highScores = [];
 
 const questionsLib = [
@@ -143,10 +142,11 @@ var startQuizHandler = function () {
 var recordUsernameScore = function () {
   var questionDivEl = document.querySelector("#question-content");
   var mcDivEl = document.querySelector("#multiple-choice-wrapper-form");
-
+  var timerEl = document.querySelector("#timer-id");
   // remove the current content to create the form to record user name and score
   questionDivEl.remove();
   mcDivEl.remove();
+  timerEl.remove();
 
   // create header for High Score element
   var highScoreHeaderEl = document.createElement("h2");
@@ -157,6 +157,9 @@ var recordUsernameScore = function () {
 
   // show user score
   var scoreEl = document.createElement("p");
+  if (userScore < 0) {
+    userScore = 0;
+  }
   scoreEl.textContent = "Your final score is: " + userScore;
 
   quizFormEl.appendChild(scoreEl);
@@ -208,7 +211,7 @@ var quizAnswerVerifyButtonHandler = function (event) {
     questionId = qId + 1;
     // get the next question and update the page
     // check if we have reached the end of the quiz and if so ask user to enter initials
-    if (questionId < questionsLib.length) {
+    if (questionId < questionsLib.length && userScore > 0) {
       askCodingQuestionWrapper(questionId, isCorrect);
     } else {
       clearInterval(timeInterval);

@@ -5,6 +5,7 @@ var quizFormEl = document.querySelector("#quiz-form");
 var startQuizFormEl = document.querySelector("#start-quiz-form");
 var questionId = 0;
 var userScore = 60;
+var highScores = [];
 
 const questionsLib = [
   "Commonly used data types DO NOT include:",
@@ -160,18 +161,19 @@ var recordUsernameScore = function () {
   quizFormEl.appendChild(scoreEl);
 
   // create input for user's initials
-  var userInfoEl = document.createElement("div");
-  userInfoEl.className = "user-info";
-  userInfoEl.innerHTML = "<label for='user-name'>Enter Initials:</label>";
+  var userInfoFormEl = document.createElement("form");
+  userInfoFormEl.className = "user-info";
+  userInfoFormEl.innerHTML = "<label for='user-name'>Enter Initials:</label>";
 
-  quizFormEl.appendChild(userInfoEl);
+  quizFormEl.appendChild(userInfoFormEl);
   var userInitalEl = document.createElement("INPUT");
 
+  userInitalEl.name = "user-name";
   userInitalEl.id = "user-name";
   userInitalEl.setAttribute("type", "text");
   userInitalEl.setAttribute("placeholder", "Your Initials");
 
-  quizFormEl.appendChild(userInitalEl);
+  userInfoFormEl.appendChild(userInitalEl);
 
   // create submit button
   var submitEl = document.createElement("button");
@@ -179,7 +181,8 @@ var recordUsernameScore = function () {
   submitEl.type = "submit";
   submitEl.className = "btn submit-btn";
   submitEl.textContent = "Submit";
-  quizFormEl.appendChild(submitEl);
+  userInfoFormEl.appendChild(submitEl);
+  console.log(submitEl);
 };
 
 // wait for the answer button click
@@ -211,7 +214,26 @@ var quizAnswerVerifyButtonHandler = function (event) {
   }
 };
 
-var saveUserData = function () {};
+var loadUserData = function () {
+  highScores = localStorage.getItem("highScores");
+
+  if (!highScores) {
+    return false;
+  }
+  return highScores;
+};
+var saveUserData = function (event) {
+  event.preventDefault();
+  console.log("saving user data");
+  var username = document.querySelector("input[name='user-name']").value;
+  var userObj = {
+    name: username,
+    score: userScore,
+  };
+
+  highScores.push(userObj);
+  localStorage.setItem("highScores", JSON.stringify(highScores));
+};
 /**
  * Main Program
  ******************************************************************************/
@@ -219,4 +241,5 @@ var saveUserData = function () {};
 startQuizFormEl.addEventListener("click", startQuizHandler);
 // 2. click event handler for the answer quiz button
 quizFormEl.addEventListener("click", quizAnswerVerifyButtonHandler);
+// 3. submit user name and score
 quizFormEl.addEventListener("submit", saveUserData);

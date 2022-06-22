@@ -4,6 +4,7 @@
 var quizFormEl = document.querySelector("#quiz-form");
 var startQuizFormEl = document.querySelector("#start-quiz-form");
 var questionId = 0;
+var userScore = 60;
 
 const questionsLib = [
   "Commonly used data types DO NOT include:",
@@ -23,12 +24,12 @@ const correctAnswersLib = ["alerts", "parentheses", "all of the above", "quotes"
 /**
  * Function Definitions
  ******************************************************************************/
-var askCodingQuestionWrapper = function (questionIndex) {
+var askCodingQuestionWrapper = function (questionIndex, prevQVerdict = null) {
   // check if this question form is already there otherwise create it
   var questionAsked = document.querySelector("#question-content");
   // console.log("question asked: " + questionAsked);
   if (questionAsked) {
-    askNextQuestionHandler(questionIndex);
+    askNextQuestionHandler(questionIndex, prevQVerdict);
   }
   // quiz just started, ask first question
   else {
@@ -57,7 +58,7 @@ var createQuestionElement = function (questionIndex) {
   multipleChoiceFormEl.id = "multiple-choice-wrapper-form";
   quizFormEl.appendChild(multipleChoiceFormEl);
   //create answer elements
-  mulChoices = answersLib[questionIndex];
+  var mulChoices = answersLib[questionIndex];
   mulChoices = mulChoices.split(",");
 
   for (var i = 0; i < mulChoices.length; i++) {
@@ -66,10 +67,21 @@ var createQuestionElement = function (questionIndex) {
   }
 };
 
-var askNextQuestionHandler = function (questionIndex) {
-  questionEl = document.querySelector("#question-text-id");
+var askNextQuestionHandler = function (questionIndex, prevQVerdict) {
+  var questionEl = document.querySelector("#question-text-id");
+  var mulChoiceFromEl = document.querySelector("#multiple-choice-wrapper-form");
 
-  console.log(questionEl);
+  //update the h3 element with the next question
+  questionEl.textContent = questionsLib[questionIndex];
+
+  //get the answer div and update with the new MC options
+  var mulChoices = answersLib[questionIndex];
+  mulChoices = mulChoices.split(",");
+
+  for (var i = 0; i < mulChoices.length; i++) {
+    console.log("update answer button " + i + " option: " + mulChoices[i]);
+    updateAnswerButton(mulChoices[i], i + 1);
+  }
 };
 /**
  * @function createAnswerButton()
@@ -86,10 +98,19 @@ var createAnswerButton = function (choice, index) {
   // create mulitple choice button and return the element
   var choiceEl = document.createElement("button");
   choiceEl.className = "multiple-choice-option-group";
+  choiceEl.id = "choice-" + index;
   choiceEl.setAttribute("data-option-answer", choice);
-  //choiceEl.id = "choice-" + choice;
   choiceEl.textContent = index + ". " + choice;
   return choiceEl;
+};
+
+var updateAnswerButton = function (choice, index) {
+  var choiceEl = document.querySelector("#choice-" + index);
+
+  // console.log(choiceEl);
+
+  choiceEl.setAttribute("data-option-answer", choice);
+  choiceEl.textContent = index + ". " + choice;
 };
 /**
  *
@@ -102,34 +123,95 @@ var startQuizHandler = function (event) {
   var pageTitleEl = document.querySelector(".page-title");
   var introContentEl = document.querySelector("#intro-content");
   var startButtonEl = document.querySelector("#start-quiz-btn");
-  pageTitleEl.textContent = "";
-  introContentEl.textContent = "";
+  var introSectionEl = document.querySelector("#intro-section-id");
+  // pageTitleEl.textContent = "";
+  // introContentEl.textContent = "";
 
+  pageTitleEl.remove();
+  introContentEl.remove();
+  introSectionEl.remove();
   //remove the start button
   startButtonEl.parentElement.removeChild(startButtonEl);
+  startQuizFormEl.remove();
 
   //start pull up the quiz questions
   askCodingQuestionWrapper(questionId);
+};
+
+var recordUsernameScore = function () {
+  var questionDivEl = document.querySelector("#question-content");
+  var mcDivEl = document.querySelector("#multiple-choice-wrapper-form");
+
+  // remove the current content to create the form to record user name and score
+  questionDivEl.remove();
+  mcDivEl.remove();
+
+  // create header for High Score element
+  var highScoreHeaderEl = document.createElement("h2");
+  highScoreHeaderEl.id = "high-scores-header";
+  highScoreHeaderEl.textContent = "All Done!";
+
+  quizFormEl.appendChild(highScoreHeaderEl);
+
+  // show user score
+  var scoreEl = document.createElement("p");
+  scoreEl.textContent = "Your final score is: " + userScore;
+
+  quizFormEl.appendChild(scoreEl);
+
+  // create input for user's initials
+  var userInfoEl = document.createElement("div");
+  userInfoEl.className = "user-info";
+  userInfoEl.innerHTML = "<label for='user-name'>Enter Initials:</label>";
+
+  quizFormEl.appendChild(userInfoEl);
+  var userInitalEl = document.createElement("INPUT");
+
+  userInitalEl.id = "user-name";
+  userInitalEl.setAttribute("type", "text");
+  userInitalEl.setAttribute("placeholder", "Your Initials");
+
+  quizFormEl.appendChild(userInitalEl);
+
+  // create submit button
+  var submitEl = document.createElement("button");
+  submitEl.id = "submit-id";
+  submitEl.type = "submit";
+  submitEl.className = "btn submit-btn";
+  submitEl.textContent = "Submit";
+  quizFormEl.appendChild(submitEl);
 };
 
 // wait for the answer button click
 var quizAnswerVerifyButtonHandler = function (event) {
   var eventTarget = event.target;
   var qId = questionId; // global var
+  var isCorrect;
   if (eventTarget.matches(".multiple-choice-option-group")) {
-    console.log("selected answer from mcq");
+    console.log("selected answer from mcq " + qId);
     var userAnswer = eventTarget.getAttribute("data-option-answer");
-    // console.log(correctAnswersLib[questionId]);
-    // console.log(userAnswer);
-    if (userAnswer === correctAnswersLib[questionId]) {
+    console.log("correct answer is: " + correctAnswersLib[qId]);
+    console.log("user answer is " + userAnswer);
+    if (userAnswer === correctAnswersLib[qId]) {
       console.log("correct");
+      isCorrect = "Correct!";
     } else {
+      isCorrect = "Wrong!";
       console.log("wrong");
     }
+
     questionId = qId + 1;
-    askCodingQuestionWrapper(questionId++);
+    // get the next question and update the page
+    // check if we have reached the end of the quiz and if so ask user to enter initials
+    if (questionId < questionsLib.length) {
+      askCodingQuestionWrapper(questionId, isCorrect);
+    } else {
+      recordUsernameScore();
+    }
   }
 };
+
+var saveUserData = function () {};
 /**
  * Main Program
  ******************************************************************************/
@@ -137,3 +219,4 @@ var quizAnswerVerifyButtonHandler = function (event) {
 startQuizFormEl.addEventListener("click", startQuizHandler);
 // 2. click event handler for the answer quiz button
 quizFormEl.addEventListener("click", quizAnswerVerifyButtonHandler);
+quizFormEl.addEventListener("submit", saveUserData);

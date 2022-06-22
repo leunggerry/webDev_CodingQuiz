@@ -3,8 +3,11 @@
  ******************************************************************************/
 var quizFormEl = document.querySelector("#quiz-form");
 var startQuizFormEl = document.querySelector("#start-quiz-form");
+//var timerEl = document.querySelector(".timer-txt");
+
+var timeInterval;
 var questionId = 0;
-var userScore = 60;
+var userScore = 15;
 var highScores = [];
 
 const questionsLib = [
@@ -117,16 +120,12 @@ var updateAnswerButton = function (choice, index) {
  *
  * @param {*} event
  */
-var startQuizHandler = function (event) {
-  event.preventDefault();
-
+var startQuizHandler = function () {
   //get rid of the welcome screen
   var pageTitleEl = document.querySelector(".page-title");
   var introContentEl = document.querySelector("#intro-content");
   var startButtonEl = document.querySelector("#start-quiz-btn");
   var introSectionEl = document.querySelector("#intro-section-id");
-  // pageTitleEl.textContent = "";
-  // introContentEl.textContent = "";
 
   pageTitleEl.remove();
   introContentEl.remove();
@@ -135,6 +134,8 @@ var startQuizHandler = function (event) {
   startButtonEl.parentElement.removeChild(startButtonEl);
   startQuizFormEl.remove();
 
+  //start the countdown
+  countDown();
   //start pull up the quiz questions
   askCodingQuestionWrapper(questionId);
 };
@@ -191,16 +192,17 @@ var quizAnswerVerifyButtonHandler = function (event) {
   var qId = questionId; // global var
   var isCorrect;
   if (eventTarget.matches(".multiple-choice-option-group")) {
-    console.log("selected answer from mcq " + qId);
+    // console.log("selected answer from mcq " + qId);
     var userAnswer = eventTarget.getAttribute("data-option-answer");
-    console.log("correct answer is: " + correctAnswersLib[qId]);
-    console.log("user answer is " + userAnswer);
+    // console.log("correct answer is: " + correctAnswersLib[qId]);
+    // console.log("user answer is " + userAnswer);
     if (userAnswer === correctAnswersLib[qId]) {
-      console.log("correct");
+      // console.log("correct");
       isCorrect = "Correct!";
     } else {
       isCorrect = "Wrong!";
-      console.log("wrong");
+      userScore -= 5;
+      // console.log("wrong");
     }
 
     questionId = qId + 1;
@@ -209,9 +211,34 @@ var quizAnswerVerifyButtonHandler = function (event) {
     if (questionId < questionsLib.length) {
       askCodingQuestionWrapper(questionId, isCorrect);
     } else {
+      clearInterval(timeInterval);
       recordUsernameScore();
     }
   }
+};
+
+var countDown = function () {
+  // adding timer span
+  var timerSpanEl = document.createElement("span");
+  timerSpanEl.className = "timer-span";
+  timerSpanEl.id = "timer-id";
+
+  document.querySelector("header").appendChild(timerSpanEl);
+
+  timeInterval = setInterval(function () {
+    if (userScore > 1) {
+      timerSpanEl.textContent = userScore + " seconds remaining.";
+      userScore--;
+    } else if (userScore == 1) {
+      timerSpanEl.textContent = userScore + " second remaining.";
+      userScore--;
+    } else {
+      timerSpanEl.textContent = "0 seconds remining";
+      clearInterval(timeInterval);
+      alert("timer done");
+      recordUsernameScore();
+    }
+  }, 1000);
 };
 
 var loadUserData = function () {
@@ -233,6 +260,7 @@ var saveUserData = function (event) {
 
   highScores.push(userObj);
   localStorage.setItem("highScores", JSON.stringify(highScores));
+  alert("Score saved!");
 };
 /**
  * Main Program

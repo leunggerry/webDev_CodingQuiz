@@ -72,8 +72,13 @@ var createQuestionElement = function (questionIndex) {
 
 var askNextQuestionHandler = function (questionIndex, prevQVerdict) {
   var questionEl = document.querySelector("#question-text-id");
-  var mulChoiceFromEl = document.querySelector("#multiple-choice-wrapper-form");
+  var mulChoiceFormEl = document.querySelector("#multiple-choice-wrapper-form");
 
+  //remove previous verdict span
+  var prevAnswerVerdictEl = document.querySelector("#answer-verdict");
+  if (prevAnswerVerdictEl) {
+    prevAnswerVerdictEl.remove();
+  }
   //update the h3 element with the next question
   questionEl.textContent = questionsLib[questionIndex];
 
@@ -85,6 +90,13 @@ var askNextQuestionHandler = function (questionIndex, prevQVerdict) {
     console.log("update answer button " + i + " option: " + mulChoices[i]);
     updateAnswerButton(mulChoices[i], i + 1);
   }
+
+  prevAnswerVerdictEl = document.createElement("span");
+  prevAnswerVerdictEl.id = "answer-verdict";
+  prevAnswerVerdictEl.className = "answer-verdict";
+  prevAnswerVerdictEl.textContent = prevQVerdict;
+
+  mulChoiceFormEl.appendChild(prevAnswerVerdictEl);
 };
 /**
  * @function createAnswerButton()
@@ -244,14 +256,17 @@ var countDown = function () {
   }, 1000);
 };
 
-var loadUserData = function () {
-  highScores = localStorage.getItem("highScores");
+var loadHighScores = function () {
+  var userScores = localStorage.getItem("highScores");
 
-  if (!highScores) {
-    return false;
+  if (!userScores) {
+    return [];
   }
-  return highScores;
+  userScores = JSON.parse(userScores);
+  console.log("high scores retreived: " + userScores);
+  return userScores;
 };
+
 var saveUserData = function (event) {
   event.preventDefault();
   console.log("saving user data");
@@ -260,11 +275,13 @@ var saveUserData = function (event) {
     name: username,
     score: userScore,
   };
-
+  // load the previous scores to make sure we dont overwrite old scores
+  highScores = loadHighScores();
   highScores.push(userObj);
   localStorage.setItem("highScores", JSON.stringify(highScores));
   alert("Score saved!");
 };
+
 /**
  * Main Program
  ******************************************************************************/
